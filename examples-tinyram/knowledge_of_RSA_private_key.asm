@@ -1,0 +1,7 @@
+MOV r0 r0 3233
+MOV r1 r0 17
+MOV r2 r0 413
+MOV r3 r0 780
+MULL r5 r1 r2
+UMOD r7 r5 r3
+ANSWER r7 r7 r7
