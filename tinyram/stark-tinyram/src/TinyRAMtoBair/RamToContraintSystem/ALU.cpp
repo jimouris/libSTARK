@@ -964,7 +964,7 @@ void ALU_UDIV_Gadget::generateConstraints(){
 	unpackResult_g_->generateConstraints();
  	const size_t & registerLength = tinyRAMparams()->registerLength();
 	for (size_t i = 0; i < registerLength; i++)
-		enforceBooleanity(witnessRemainder_[i], Opcode::UMOD);
+		enforceBooleanity(witnessRemainder_[i], Opcode::UDIV);
 	mult_g_->generateConstraints();
 	if (standAlone_)
 	unpackArg1_g_->generateConstraints();
@@ -1790,10 +1790,14 @@ void ALU_ANSWER_Gadget::generateWitness(){
 		flag = false;
 		if (Algebra::one() == program_output)
 			program_output = pb_->val(inputs_.arg2_val_);
-        
+
+        /**
+         * Uncomment the following lines to print the result of ANSWER
+        **/
+
         size_t a = mapFieldElementToInteger(0, EXTDIM, pb_->val(inputs_.arg2_val_));
-        std::cout << "\n*** TIMESTEPS = " << max_timestep << "  ANSWER = " << a << "  (binary " << std::bitset<REGISTER_LENGTH>(a) << ")\n" << std::endl;
-        
+        std::cout << "\n*** TIMESTEPS=" << max_timestep << " ANSWER=" << a << " (binary " << std::bitset<REGISTER_LENGTH>(a) << ")\n" << std::endl;
+
 	}
 }
 
