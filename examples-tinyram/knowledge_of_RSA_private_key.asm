@@ -1,5 +1,5 @@
-MOV r0 r0 17
-MOV r1 r1 11
+SECREAD r0
+SECREAD r1
 SUB r3 r0 1
 SUB r4 r1 1
 MULL r5 r3 r4

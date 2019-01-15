@@ -17,15 +17,18 @@ using std::move;
 const string timePrefix = "-t";
 const string securityPrefix = "-s";
 const string noProverPrefix = "-p";
+const string tapePrefix = "-T";
 
 void printHelp(const string exeName){
     cout<<"Usage:"<<endl;
-    cout<<"$>"<<exeName<<" <TinyRAM assembly file path> "<<timePrefix<<"<trace length log_2> ["<<securityPrefix<<"<security parameter]> ["<<noProverPrefix<<"<0,1>]"<<endl;
+    cout<<"$>"<<exeName<<" <TinyRAM assembly file path> "<<timePrefix<<"<trace length log_2> ["<<securityPrefix<<"<security parameter]> ["<<noProverPrefix<<"<0,1>] ["<<tapePrefix<<"<tapeFile>]"<<endl;
     cout<<endl<<"Example:"<<endl;
     cout<<"$>"<<exeName<<" examples-tinyram/collatz.asm "<<timePrefix<<"10 "<<securityPrefix<<"120"<<endl;
     cout<<endl<<"The above execution results in execution of STARK simulation over the collatz program, using at most 1023 (which is 2^10-1) machine steps, and soundness error at most 2^-120."<<endl;
     cout<<endl<<"In the simulation the Prover and Verify interact, the Prover generates a proof and the Verifier verifies it. During the executions the specifications of generated BAIR and APR, measurements, and Verifiers decision, are printed to the standard output."<<endl;
     cout<<"adding '-p0' to the arguments causes execution of verifier only, without the prover, simulating its execution time and measuring proof length"<<std::endl;
+    cout<<endl<<"Another example:"<<endl;
+    cout<<"$>"<<exeName<<" examples-tinyram/knowledge_of_factorization.asm "<<timePrefix<<"10 "<<securityPrefix<<"120 "<<tapePrefix<<"./examples-tinyram/knowledge_of_factorization_auxtape.txt"<<endl;
 }
 
 libstark::BairInstance constructInstance(const TinyRAMProgram& prog, const unsigned int t){
@@ -59,13 +62,13 @@ libstark::BairWitness constructWitness(const TinyRAMProgram& prog, const unsigne
     return libstark::BairWitness(move(cs2bairColoring_), move(cs2bairMemory_));
 }
 
-void execute(const string assemblyFile, const unsigned int t, const unsigned int securityParameter, const bool simulateOnly){
-    cout<<"Executing simulation with assembly from " + assemblyFile + " over 2^" + to_string(t) +"-1 steps, and soundness error at most 2^-" +to_string(securityParameter)<<endl;
+void execute(const string assemblyFile, const string tapeFile, const unsigned int t, const unsigned int securityParameter, const bool simulateOnly){
+    cout<<"Executing simulation with assembly from " + assemblyFile + " over 2^" + to_string(t) +"-1 steps, and soundness error at most 2^-" +to_string(securityParameter)+" and private inputs from "+tapeFile<<endl<<endl;
     
     //Initialize instance
     initTinyRAMParamsFromEnvVariables();
 	TinyRAMProgram program(assemblyFile, REGISTERS_NUMBER, trRegisterLen);
-    program.addInstructionsFromFile(assemblyFile);
+    program.addInstructionsFromFile(assemblyFile, tapeFile);
 
     
     //simulation only - no prover
@@ -91,6 +94,7 @@ int main(int argc, char *argv[]) {
     unsigned int executionLenLog = 0;
     unsigned int securityParameter = 60;
     bool noProver = false;
+    string tapeFile;
     for(int i=2; i< argc; i++){
         const string currArg(argv[i]);
         if(currArg.length()<3){
@@ -98,8 +102,12 @@ int main(int argc, char *argv[]) {
         }
 
         const string prefix = currArg.substr(0,2);
-        const unsigned int num(stoul(currArg.substr(2)));
+        if(prefix == tapePrefix){
+            tapeFile = currArg.substr(2);
+            continue;
+        }
 
+        const unsigned int num(stoul(currArg.substr(2)));
         if(prefix == timePrefix){
             executionLenLog = num;
         }
@@ -116,7 +124,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    execute(assemblyFile,executionLenLog,securityParameter,noProver);
+    execute(assemblyFile,tapeFile,executionLenLog,securityParameter,noProver);
 
     return 0;
 }

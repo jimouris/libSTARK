@@ -146,16 +146,44 @@
         }
     }
 	
-    void TinyRAMProgram::addInstructionsFromFile(const std::string filename){
+    vector<string> split(const string &s, char delim) {
+        vector<string> result;
+        stringstream ss (s);
+        string item;
+
+        while (getline (ss, item, delim)) {
+            result.push_back (item);
+        }
+
+        return result;
+    }
+
+    void TinyRAMProgram::addInstructionsFromFile(const std::string filename, const std::string tapeFile){
         std::ifstream ifs(filename);
         std::string content((std::istreambuf_iterator<char>(ifs)),std::istreambuf_iterator<char>());
-        
         std::regex regex{R"([\n]+)"}; // split to lines
         std::sregex_token_iterator it{content.begin(), content.end(), regex, -1};
         std::vector<std::string> lines{it, {}};
+        
+        // Read private inputs (tapeFile) to private_lines vector
+        std::ifstream tapefs(tapeFile);
+        std::string private_inputs((std::istreambuf_iterator<char>(tapefs)),std::istreambuf_iterator<char>());
+        std::sregex_token_iterator it2{private_inputs.begin(), private_inputs.end(), regex, -1};
+        std::vector<std::string> private_lines{it2, {}};
 
+        int secread_cnt = 0;
         for(const auto& l : lines){
-            MachineInstruction instruction(l);
-            addInstruction(instruction);
+            std::cout << l << std::endl; // print the current instruction
+            
+            vector<string> splitted_line = split(l, ' '); // tokenize the instruction
+            if (! splitted_line[0].compare("SECREAD") ) {  // if the instruction is SECREAD, replace it with a private MOV
+                int regnum = stoi( splitted_line[1].substr(1, splitted_line[1].length()) );
+                int immidiate = stoi( private_lines[secread_cnt++] );
+                MachineInstruction instruction(Opcode::MOV, true, regnum, 0, immidiate);
+                addInstruction(instruction);
+            } else {
+                MachineInstruction instruction(l);
+                addInstruction(instruction);                
+            }
         }
     }

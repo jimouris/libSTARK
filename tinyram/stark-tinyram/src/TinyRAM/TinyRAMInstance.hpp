@@ -99,7 +99,7 @@ public:
 	const RAMArchParams& archParams() const { return archParams_; }
 	const MachineInstruction& getInstructionAtPc(const size_t pc) const { return code_[pc]; }
 	void addInstruction(const MachineInstruction& instruction) { code_.emplace_back(instruction); }
-	void addInstructionsFromFile(const std::string filename);
+	void addInstructionsFromFile(const std::string filename, const std::string tapeFile);
     unsigned int pcLength() const {
 		int codeSize = code_.size();
 		if (codeSize == 0){ _COMMON_FATAL("TinyRAMProgram : The code is not initialized"); };
